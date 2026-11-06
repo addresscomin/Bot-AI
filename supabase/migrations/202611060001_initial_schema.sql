@@ -104,13 +104,13 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   insert into public.profiles (id, display_name)
   values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', ''));
   return new;
 end;
-$;
+$$;
 
 create trigger on_auth_user_created
 after insert on auth.users
@@ -131,12 +131,12 @@ $$;
 
 create or replace function public.is_staff()
 returns boolean language sql stable security definer set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.user_roles
     where user_id = (select auth.uid()) and role in ('moderator','admin')
   );
-$;
+$$;
 
 -- SECURITY DEFINER helpers keep private contract records unreadable to viewers
 -- while allowing catalogue policies to verify distribution rights.
@@ -146,7 +146,7 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.content_rights r
     where r.series_id = p_series_id
@@ -154,7 +154,7 @@ as $
       and r.starts_at <= now()
       and (r.ends_at is null or r.ends_at > now())
   );
-$;
+$$;
 
 create or replace function public.has_active_episode_rights(p_episode_id uuid)
 returns boolean
@@ -162,7 +162,7 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.content_rights r
     where r.episode_id = p_episode_id
@@ -170,7 +170,7 @@ as $
       and r.starts_at <= now()
       and (r.ends_at is null or r.ends_at > now())
   );
-$;
+$$;
 
 revoke all on function public.has_active_series_rights(uuid) from public;
 revoke all on function public.has_active_episode_rights(uuid) from public;
