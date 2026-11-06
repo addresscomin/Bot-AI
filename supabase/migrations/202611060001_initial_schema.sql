@@ -99,6 +99,23 @@ create table public.content_reports (
   check (series_id is not null or episode_id is not null)
 );
 
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  insert into public.profiles (id, display_name)
+  values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', ''));
+  return new;
+end;
+$;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
 create index series_status_published_idx on public.series(status, published_at desc);
 create index episodes_series_status_idx on public.episodes(series_id, status, episode_number);
 create index rights_status_dates_idx on public.content_rights(status, starts_at, ends_at);
@@ -139,14 +156,34 @@ create policy "roles_read_self_or_staff" on public.user_roles for select to auth
 using (user_id = (select auth.uid()) or public.is_staff());
 
 create policy "published_series_public_read" on public.series for select to anon, authenticated
-using (status = 'published');
+using (
+  status = 'published' and exists (
+    select 1 from public.content_rights r
+    where r.series_id = id
+      and r.status = 'verified'
+      and r.starts_at <= now()
+      and (r.ends_at is null or r.ends_at > now())
+  )
+);
 create policy "staff_manage_series" on public.series for all to authenticated
 using (public.is_staff()) with check (public.is_staff());
 
 create policy "published_episodes_public_read" on public.episodes for select to anon, authenticated
 using (
-  status = 'published' and exists (
-    select 1 from public.series s where s.id = series_id and s.status = 'published'
+  status = 'published'
+  and exists (
+    select 1 from public.series s
+    where s.id = series_id and s.status = 'published'
+      and exists (
+        select 1 from public.content_rights sr
+        where sr.series_id = s.id and sr.status = 'verified'
+          and sr.starts_at <= now() and (sr.ends_at is null or sr.ends_at > now())
+      )
+  )
+  and exists (
+    select 1 from public.content_rights er
+    where er.episode_id = id and er.status = 'verified'
+      and er.starts_at <= now() and (er.ends_at is null or er.ends_at > now())
   )
 );
 create policy "staff_manage_episodes" on public.episodes for all to authenticated
