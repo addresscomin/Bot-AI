@@ -131,12 +131,51 @@ $$;
 
 create or replace function public.is_staff()
 returns boolean language sql stable security definer set search_path = ''
-as $$
+as $
   select exists (
     select 1 from public.user_roles
     where user_id = (select auth.uid()) and role in ('moderator','admin')
   );
-$$;
+$;
+
+-- SECURITY DEFINER helpers keep private contract records unreadable to viewers
+-- while allowing catalogue policies to verify distribution rights.
+create or replace function public.has_active_series_rights(p_series_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1 from public.content_rights r
+    where r.series_id = p_series_id
+      and r.status = 'verified'
+      and r.starts_at <= now()
+      and (r.ends_at is null or r.ends_at > now())
+  );
+$;
+
+create or replace function public.has_active_episode_rights(p_episode_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1 from public.content_rights r
+    where r.episode_id = p_episode_id
+      and r.status = 'verified'
+      and r.starts_at <= now()
+      and (r.ends_at is null or r.ends_at > now())
+  );
+$;
+
+revoke all on function public.has_active_series_rights(uuid) from public;
+revoke all on function public.has_active_episode_rights(uuid) from public;
+grant execute on function public.has_active_series_rights(uuid) to anon, authenticated;
+grant execute on function public.has_active_episode_rights(uuid) to anon, authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.user_roles enable row level security;
@@ -156,15 +195,7 @@ create policy "roles_read_self_or_staff" on public.user_roles for select to auth
 using (user_id = (select auth.uid()) or public.is_staff());
 
 create policy "published_series_public_read" on public.series for select to anon, authenticated
-using (
-  status = 'published' and exists (
-    select 1 from public.content_rights r
-    where r.series_id = id
-      and r.status = 'verified'
-      and r.starts_at <= now()
-      and (r.ends_at is null or r.ends_at > now())
-  )
-);
+using (status = 'published' and public.has_active_series_rights(id));
 create policy "staff_manage_series" on public.series for all to authenticated
 using (public.is_staff()) with check (public.is_staff());
 
@@ -173,17 +204,18 @@ using (
   status = 'published'
   and exists (
     select 1 from public.series s
-    where s.id = series_id and s.status = 'published'
-      and exists (
-        select 1 from public.content_rights sr
-        where sr.series_id = s.id and sr.status = 'verified'
-          and sr.starts_at <= now() and (sr.ends_at is null or sr.ends_at > now())
-      )
+    where s.id = series_id
+      and s.status = 'published'
+      and public.has_active_series_rights(s.id)
   )
-  and exists (
-    select 1 from public.content_rights er
-    where er.episode_id = id and er.status = 'verified'
-      and er.starts_at <= now() and (er.ends_at is null or er.ends_at > now())
+  -- Series-wide licences cover every episode unless an episode has its own
+  -- rights record; explicit episode records must themselves be verified.
+  and (
+    not exists (
+      select 1 from public.content_rights er
+      where er.episode_id = id
+    )
+    or public.has_active_episode_rights(id)
   )
 );
 create policy "staff_manage_episodes" on public.episodes for all to authenticated
