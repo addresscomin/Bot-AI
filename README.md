@@ -1,30 +1,38 @@
-# ZeekDrop — Learn · Code · Build
+# ZEEKDROP — Short Drama Streaming Platform
 
-ZeekDrop is a mobile-development learning platform. This repository is being repurposed from the Bot-AI starter; legacy Bot-AI product files are removed from the current branch.
+ZeekDrop is being converted from the previous Bot-AI learning frontend into a mobile-first short-drama streaming product.
 
-## Product scope
+## Frontend preview (Phase 1)
 
-- Frontend development: Dart, Kotlin, Swift, Flutter, React Native, Jetpack Compose, Material Design, Cupertino and animations.
-- Backend development: JavaScript, Python, Java, Firestore, MongoDB, MySQL, REST APIs, GraphQL and Firebase services.
-- Developer workflow: Git/GitHub, VS Code, Postman.
-- Learning features: guided roadmap, courses, lessons, quizzes, progress tracking, bookmarks, projects and certificates.
+The current `index.html` is a responsive product-design prototype for the Android experience. It includes:
+- Premium dark and light themes (preference saved locally)
+- Home feed with featured series and trending/fresh rows
+- Explore page and genre filters
+- Search across the sample catalogue
+- Drama details and episode selector
+- Player interface preview
+- Watchlist and recently opened history (local browser storage)
+- Profile and settings screen
+- Responsive desktop sidebar and Android-style bottom navigation
 
-## Development status
+The sample drama catalogue and artwork are placeholders for interface testing. They are not licensed content and must not be treated as a publishable catalogue.
 
-**Phase 1 — Frontend prototype:** dashboard, roadmap, course catalogue, lesson outline, quiz interaction, progress view and responsive navigation are in `index.html`. Prototype progress is stored locally in the browser.
+## Important implementation status
 
-**Phase 2 — Backend:** authentication, user profiles, course content APIs, quiz APIs, cloud progress, bookmarks, admin/content management, database schema and security controls are planned. They are not yet implemented.
+This is a **frontend preview**, not yet a native Android APK or a production streaming service. The player is a visual interaction placeholder; it does not stream video. Login, cloud sync, subscriptions, creator uploads, rights verification, video transcoding, CDN delivery, admin operations and analytics are not connected yet.
 
-**Phase 3 — Mobile release:** Flutter client, API integration, automated testing, privacy documentation, signed Android App Bundle and Play Store release preparation.
+## Planned build phases
 
-## Project structure
+1. **Frontend:** finalize Android screen designs and navigation; then implement native Kotlin + Jetpack Compose screens.
+2. **Backend:** authentication, user profiles, catalogue APIs, episode metadata, watchlist/history sync, reporting and admin roles.
+3. **Content operations:** licensed supplier/creator intake, rights records, moderation, upload processing, transcoding and scheduled publishing.
+4. **Streaming:** object storage, HLS packaging, CDN delivery, playback authorization and cost monitoring.
+5. **Release:** accessibility, privacy and safety review, QA, signed Android App Bundle and Play Store preparation.
 
-See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for the phased architecture and proposed module layout.
+## Preview
 
-## Run the frontend prototype
+Open `index.html` in a browser or enable GitHub Pages for the repository. On mobile, it uses a compact bottom navigation layout.
 
-Open `index.html` in a modern browser. Google Fonts are loaded from the web; a system font fallback is provided.
+## Content and copyright
 
-## Important
-
-This is an in-development project, not a production-ready learning service. Do not enter sensitive information. Authentication, cloud synchronization, code execution, complete lesson content and certificate verification must be implemented and tested before public launch.
+Only content owned by ZeekDrop or content covered by documented distribution/streaming rights may be published. Sample cards in this prototype are for UI demonstration only.
