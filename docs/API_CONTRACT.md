@@ -9,6 +9,8 @@ Base path: `/v1`. All authenticated routes require an Authorization: Bearer Supa
 - `GET /v1/series/:seriesId/episodes` — published episodes for a published, rights-cleared series.
 - `GET /v1/me` — signed-in account, roles and profile.
 - `GET /v1/watchlist` — current user's saved series.
+- `GET /v1/progress` — current user's last 100 progress records.
+- `PUT /v1/progress/:episodeId` — save `{ "positionSeconds": 120, "completed": false }` for a published episode.
 - `POST /v1/watchlist` — add `{ "seriesId": "uuid" }`.
 - `DELETE /v1/watchlist/:seriesId` — remove a saved series.
 - `POST /v1/reports` — create a report with exactly one of `seriesId` or `episodeId`, plus `reason` and optional `details`.
