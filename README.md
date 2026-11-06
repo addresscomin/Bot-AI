@@ -1,31 +1,30 @@
-# Bot AI — Premium AI Platform Starter
+# ZeekDrop — Learn · Code · Build
 
-A separate starter project for Bot AI. It does not modify the existing DexAI project.
+ZeekDrop is a mobile-development learning platform. This repository is being repurposed from the Bot-AI starter; legacy Bot-AI product files are removed from the current branch.
 
-## Included
-- Responsive premium landing page and chat interface
-- Express backend and health endpoint
-- Optional OpenAI chat integration
-- Basic API rate limiting
-- Optional Stripe subscription Checkout endpoint
-- Environment-variable configuration; no secrets committed
+## Product scope
 
-## Run locally
-1. Install Node.js 20+.
-2. Copy `.env.example` to `.env`.
-3. Run `npm install`.
-4. Run `npm start`.
-5. Open `http://localhost:3000`.
+- Frontend development: Dart, Kotlin, Swift, Flutter, React Native, Jetpack Compose, Material Design, Cupertino and animations.
+- Backend development: JavaScript, Python, Java, Firestore, MongoDB, MySQL, REST APIs, GraphQL and Firebase services.
+- Developer workflow: Git/GitHub, VS Code, Postman.
+- Learning features: guided roadmap, courses, lessons, quizzes, progress tracking, bookmarks, projects and certificates.
 
-The UI works in preview mode without keys. Live AI requires `OPENAI_API_KEY`. Billing requires `STRIPE_SECRET_KEY` and valid recurring Stripe Price IDs. Configure secrets only in environment settings, never in frontend code or Git.
+## Development status
 
-## Render deployment
-Create a **new** Web Service and connect this separate repository.
-- Runtime: Node
-- Build command: `npm install`
-- Start command: `npm start`
-- Add environment variables from `.env.example` in Render Environment settings.
-- Choose a region close to the intended audience.
+**Phase 1 — Frontend prototype:** dashboard, roadmap, course catalogue, lesson outline, quiz interaction, progress view and responsive navigation are in `index.html`. Prototype progress is stored locally in the browser.
 
-## Production gaps
-This is a starter, not a production-ready SaaS. Before public signups or accepting payments, add authentication, persistent user records, Stripe webhooks, per-user quotas, terms/privacy pages, abuse prevention, monitoring, and tests. Start with Stripe test mode.
+**Phase 2 — Backend:** authentication, user profiles, course content APIs, quiz APIs, cloud progress, bookmarks, admin/content management, database schema and security controls are planned. They are not yet implemented.
+
+**Phase 3 — Mobile release:** Flutter client, API integration, automated testing, privacy documentation, signed Android App Bundle and Play Store release preparation.
+
+## Project structure
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for the phased architecture and proposed module layout.
+
+## Run the frontend prototype
+
+Open `index.html` in a modern browser. Google Fonts are loaded from the web; a system font fallback is provided.
+
+## Important
+
+This is an in-development project, not a production-ready learning service. Do not enter sensitive information. Authentication, cloud synchronization, code execution, complete lesson content and certificate verification must be implemented and tested before public launch.
