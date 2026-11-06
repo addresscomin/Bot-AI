@@ -14,7 +14,7 @@ ZeekDrop is being built as a short-drama streaming product, replacing the previo
 
 ## Important current status
 
-The web customer experience and the two portal interfaces are source-code deliverables, not a live production service. The Android app is still a foundation and needs real catalogue/auth/playback integration. The API build has passed in GitHub Actions; the Android SDK setup issue was corrected and its APK build is being checked. A passing CI run must be confirmed before calling the Android build verified.
+The web customer experience and the two portal interfaces are source-code deliverables, not a live production service. The Android app is still a foundation and needs real catalogue/auth/playback integration. The latest GitHub Actions run passed both the backend TypeScript build and Android debug APK build. The debug APK is available as the `zeekdrop-debug-apk` artifact for 7 days from the run: https://github.com/addresscomin/Bot-AI/actions/runs/42238785935. This is a test build, not a signed release.
 
 The SQL migration is committed but has **not** been applied to a dedicated ZeekDrop Supabase project. No live database, API hosting, storage bucket, licensed video catalogue, HLS transcoder, CDN, signed release APK/AAB or Play Store release is configured.
 
