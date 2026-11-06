@@ -1,10 +1,11 @@
 # ZeekDrop architecture
 
 ## Product surfaces
-- Customer Android app: browse, search, series details, HLS playback, watchlist, continue watching, report content, profile.
-- Creator portal: submit metadata and media, track review state, view rights expiry and processing status.
-- Owner console: roles, rights evidence, moderation queue, catalogue publishing, scheduled releases and audit trail.
-- Backend: authenticated APIs, catalogue, entitlement/playback authorization, ingestion and publishing jobs.
+- Customer Android app: browse, search, series details, HLS playback, watchlist, continue watching, report content and profile.
+- Creator Studio: create drama and episode metadata, save drafts and submit owned/licensed material for review.
+- Owner Studio: inspect catalogue, enter verified rights evidence, publish approved dramas and process content reports.
+- Backend: public catalogue reads plus authenticated profile, watchlist and reporting APIs.
+- Database: Supabase Postgres with RLS and explicit distribution-rights gates.
 
 ## Default technical direction
 - Android: Kotlin + Jetpack Compose.
@@ -18,9 +19,9 @@
 2. Store territory, platform, start/end dates and rights holder.
 3. Keep new content private while rights status is pending.
 4. Staff verifies the agreement and moderation checks.
-5. Publishing is allowed only while rights are verified and in-date.
-6. Expired/revoked rights automatically block playback and new publication.
-7. Keep a takedown/report workflow and immutable operational audit events.
+5. Publishing is allowed only while series rights are verified and in-date. If episode-specific rights exist, they must also be verified and in-date.
+6. Expired/revoked rights block public catalogue access.
+7. Keep a takedown/report workflow and add immutable audit events before public launch.
 
 Never scrape or re-upload third-party shows without explicit distribution rights. A credit line is not a licence.
 
@@ -28,11 +29,11 @@ Never scrape or re-upload third-party shows without explicit distribution rights
 - Use a dedicated Supabase project for ZeekDrop; do not reuse unrelated projects.
 - Frontend/mobile may contain only the Supabase project URL and publishable key.
 - Never put service-role/secret keys in Android, web assets, GitHub commits or public build logs.
-- Configure secrets in the deployment provider.
+- Configure server secrets in the deployment provider.
 - Keep development and production credentials separate.
 
 ## Release gates
-- Database migrations applied to the dedicated project and security advisors reviewed.
+- Database migration applied to the dedicated project and security advisors reviewed.
 - RLS tests prove users cannot read other users' watch data or grant themselves roles.
 - Rights verification and playback authorization tested.
 - Upload validation, file size/type limits and malware scanning integrated.
@@ -41,4 +42,6 @@ Never scrape or re-upload third-party shows without explicit distribution rights
 - Signed Android App Bundle built and tested before Play Store submission.
 
 ## Current implementation state
-The repository currently contains a web UI preview and this architecture/schema scaffold. The migration is not yet applied to a live database; no live streaming provider, API deployment, signed APK/AAB or production credentials are configured.
+Implemented in the repository: customer UI preview, initial native Android shell, TypeScript API, Supabase schema/RLS migration, owner moderation UI, creator metadata portal and GitHub Actions build workflow. Backend TypeScript build has passed. Android APK build is awaiting the corrected CI run result.
+
+Not yet deployed or production-ready: live Supabase project and migration, account bootstrap, deployed API, creator media upload, transcoding/HLS/CDN, signed playback, full Android authentication/player integration, audit pipeline, production monitoring, signed AAB and Play Store submission.
