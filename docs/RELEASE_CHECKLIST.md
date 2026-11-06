@@ -27,6 +27,7 @@
 - [ ] Accessible loading, empty, error and offline states
 
 ## Quality and release
+- [x] Backend TypeScript build and Android debug APK build pass in GitHub Actions (run 42238785935)
 - [ ] Unit, integration and end-to-end tests
 - [ ] Android device playback tests
 - [ ] Privacy policy, terms and content rating
