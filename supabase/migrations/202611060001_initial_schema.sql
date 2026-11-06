@@ -221,6 +221,61 @@ using (
 create policy "staff_manage_episodes" on public.episodes for all to authenticated
 using (public.is_staff()) with check (public.is_staff());
 
+-- Creators can prepare and submit only their own unpublished catalogue entries.
+create policy "creator_read_own_series" on public.series for select to authenticated
+using (created_by = (select auth.uid()) and public.has_role('creator'));
+create policy "creator_insert_own_series" on public.series for insert to authenticated
+with check (
+  created_by = (select auth.uid())
+  and public.has_role('creator')
+  and status in ('draft','submitted')
+);
+create policy "creator_update_own_series" on public.series for update to authenticated
+using (created_by = (select auth.uid()) and public.has_role('creator'))
+with check (
+  created_by = (select auth.uid())
+  and public.has_role('creator')
+  and status in ('draft','submitted')
+);
+
+create policy "creator_read_own_episodes" on public.episodes for select to authenticated
+using (
+  exists (
+    select 1 from public.series s
+    where s.id = series_id
+      and s.created_by = (select auth.uid())
+      and public.has_role('creator')
+  )
+);
+create policy "creator_insert_own_episodes" on public.episodes for insert to authenticated
+with check (
+  status in ('draft','submitted')
+  and exists (
+    select 1 from public.series s
+    where s.id = series_id
+      and s.created_by = (select auth.uid())
+      and public.has_role('creator')
+  )
+);
+create policy "creator_update_own_episodes" on public.episodes for update to authenticated
+using (
+  exists (
+    select 1 from public.series s
+    where s.id = series_id
+      and s.created_by = (select auth.uid())
+      and public.has_role('creator')
+  )
+)
+with check (
+  status in ('draft','submitted')
+  and exists (
+    select 1 from public.series s
+    where s.id = series_id
+      and s.created_by = (select auth.uid())
+      and public.has_role('creator')
+  )
+);
+
 create policy "staff_manage_rights" on public.content_rights for all to authenticated
 using (public.is_staff()) with check (public.is_staff());
 
