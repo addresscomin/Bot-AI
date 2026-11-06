@@ -294,7 +294,9 @@ using (public.is_staff()) with check (public.is_staff());
 grant usage on schema public to anon, authenticated;
 grant select on public.series, public.episodes to anon, authenticated;
 grant select, insert, update, delete on public.watchlist, public.watch_progress to authenticated;
-grant select, insert on public.content_reports to authenticated;
+grant select, insert, update, delete on public.content_rights to authenticated;
+grant insert, update, delete on public.series, public.episodes to authenticated;
+grant select, insert, update on public.content_reports to authenticated;
 grant select, update on public.profiles to authenticated;
 grant select on public.user_roles to authenticated;
 
