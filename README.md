@@ -1,49 +1,49 @@
 # ZEEKDROP — Short Drama Streaming Platform
 
-ZeekDrop is being converted from the previous Bot-AI learning frontend into a mobile-first short-drama streaming product.
+ZeekDrop is being built as a short-drama streaming product, replacing the previous Bot-AI learning frontend.
 
-## Frontend preview (Phase 1)
+## Project surfaces
 
-The current `index.html` is a responsive product-design prototype for the Android experience. It includes:
-- Premium dark and light themes (preference saved locally)
-- Home feed with featured series and trending/fresh rows
-- Explore page and genre filters
-- Search across the sample catalogue
-- Drama details and episode selector
-- Player interface preview
-- Watchlist and recently opened history (local browser storage)
-- Profile and settings screen
-- Responsive desktop sidebar and Android-style bottom navigation
+- **Customer preview:** `index.html` — responsive OTT-style UI prototype with home, explore, search, details, player preview, library and profile.
+- **Android:** `android/` — Kotlin + Jetpack Compose native app foundation.
+- **Backend:** `backend/` — TypeScript API with health, published catalogue, episode listing, authenticated profile, watchlist and content-report routes.
+- **Owner Studio:** `web/admin/index.html` — browser-based moderation console for catalogue review, rights entry and report handling.
+- **Creator Studio:** `web/creator/index.html` — browser-based metadata submission portal for creator-owned drafts and episodes.
+- **Database:** `supabase/migrations/` — Postgres schema, RLS, rights gates and creator-owned submission policies.
+- **CI:** `.github/workflows/zeekdrop-ci.yml` — backend build and Android debug APK build.
 
-The sample drama catalogue and artwork are placeholders for interface testing. They are not licensed content and must not be treated as a publishable catalogue.
+## Important current status
 
-## Important implementation status
+The web customer experience and the two portal interfaces are source-code deliverables, not a live production service. The Android app is still a foundation and needs real catalogue/auth/playback integration. The API build has passed in GitHub Actions; the Android SDK setup issue was corrected and its APK build is being checked. A passing CI run must be confirmed before calling the Android build verified.
 
-This is a **frontend preview**, not yet a native Android APK or a production streaming service. The player is a visual interaction placeholder; it does not stream video. Login, cloud sync, subscriptions, creator uploads, rights verification, video transcoding, CDN delivery, admin operations and analytics are not connected yet.
+The SQL migration is committed but has **not** been applied to a dedicated ZeekDrop Supabase project. No live database, API hosting, storage bucket, licensed video catalogue, HLS transcoder, CDN, signed release APK/AAB or Play Store release is configured.
 
-## Planned build phases
+## Start here
 
-1. **Frontend:** finalize Android screen designs and navigation; then implement native Kotlin + Jetpack Compose screens.
-2. **Backend:** authentication, user profiles, catalogue APIs, episode metadata, watchlist/history sync, reporting and admin roles.
-3. **Content operations:** licensed supplier/creator intake, rights records, moderation, upload processing, transcoding and scheduled publishing.
-4. **Streaming:** object storage, HLS packaging, CDN delivery, playback authorization and cost monitoring.
-5. **Release:** accessibility, privacy and safety review, QA, signed Android App Bundle and Play Store preparation.
+1. Read `docs/ARCHITECTURE.md` and `docs/RELEASE_CHECKLIST.md`.
+2. Create a dedicated Supabase project; do not reuse unrelated projects.
+3. Follow `supabase/README.md` to apply the migration and bootstrap the first owner account.
+4. Configure only the Supabase project URL and publishable key in the web portals and Android app. Never put a service-role/secret key in client code.
+5. Add creators only after checking their identity and distribution rights.
 
-## Preview
+## Content rights
 
-Open `index.html` in a browser or enable GitHub Pages for the repository. On mobile, it uses a compact bottom navigation layout.
+Only content owned by ZeekDrop or covered by documented distribution/streaming permission may be published. Sample artwork and titles in the customer prototype are placeholders, not a licensed catalogue. Crediting a show does not replace a distribution licence.
 
-## Content and copyright
+## Build commands
 
-Only content owned by ZeekDrop or content covered by documented distribution/streaming rights may be published. Sample cards in this prototype are for UI demonstration only.
+Backend:
+```sh
+cd backend
+npm install
+npm run build
+npm start
+```
 
+Android:
+```sh
+cd android
+gradle assembleDebug
+```
 
-## Repository implementation map
-
-- `android/`: native Kotlin + Jetpack Compose Android application foundation.
-- `backend/`: TypeScript API foundation (health + published catalogue reads).
-- `supabase/migrations/`: initial Postgres schema and RLS policies; apply only to a dedicated ZeekDrop project.
-- `docs/`: architecture, API contract and release gates.
-- `.github/workflows/zeekdrop-ci.yml`: automated backend and Android build checks.
-
-The CI workflow is committed but must complete successfully on GitHub Actions before the build is considered verified. The database migration is committed but has not been applied to a live project. No video is licensed or bundled by this repository.
+The generated debug APK is for testing only. A signed release AAB, privacy/terms review, age-rating review, content moderation and real-device testing are still required.
