@@ -42,6 +42,6 @@ Never scrape or re-upload third-party shows without explicit distribution rights
 - Signed Android App Bundle built and tested before Play Store submission.
 
 ## Current implementation state
-Implemented in the repository: customer UI preview, initial native Android shell, TypeScript API, Supabase schema/RLS migration, owner moderation UI, creator metadata portal and GitHub Actions build workflow. Backend TypeScript build has passed. Android APK build is awaiting the corrected CI run result.
+Implemented in the repository: customer UI preview, initial native Android shell, TypeScript API, Supabase schema/RLS migration, owner moderation UI, creator metadata portal and GitHub Actions build workflow. Backend TypeScript build and Android debug APK build both passed in GitHub Actions run 42238785935.
 
 Not yet deployed or production-ready: live Supabase project and migration, account bootstrap, deployed API, creator media upload, transcoding/HLS/CDN, signed playback, full Android authentication/player integration, audit pipeline, production monitoring, signed AAB and Play Store submission.
