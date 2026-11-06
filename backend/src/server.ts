@@ -161,6 +161,52 @@ app.delete("/v1/watchlist/:seriesId", async (req, res) => {
   return res.status(204).end();
 });
 
+app.get("/v1/progress", async (req, res) => {
+  if (!db) return unavailable(res);
+  const user = await authenticated(req, res);
+  if (!user) return;
+  const { data, error } = await user.client.from("watch_progress")
+    .select("episode_id,position_seconds,completed_at,updated_at")
+    .eq("user_id", user.userId)
+    .order("updated_at", { ascending: false })
+    .limit(100);
+  if (error) return res.status(500).json({ error: "Watch progress request failed" });
+  return res.json({ items: data ?? [] });
+});
+
+app.put("/v1/progress/:episodeId", async (req, res) => {
+  if (!db) return unavailable(res);
+  const user = await authenticated(req, res);
+  if (!user) return;
+  const id = z.string().uuid().safeParse(req.params.episodeId);
+  const body = z.object({
+    positionSeconds: z.number().int().min(0).max(86400),
+    completed: z.boolean().default(false)
+  }).safeParse(req.body);
+  if (!id.success || !body.success) {
+    return res.status(400).json({ error: "Invalid episode id or progress values" });
+  }
+  const { data: episode, error: episodeError } = await user.client.from("episodes")
+    .select("id")
+    .eq("id", id.data)
+    .eq("status", "published")
+    .maybeSingle();
+  if (episodeError) return res.status(500).json({ error: "Episode validation failed" });
+  if (!episode) return res.status(404).json({ error: "Published episode not found" });
+
+  const { data, error } = await user.client.from("watch_progress").upsert({
+    user_id: user.userId,
+    episode_id: id.data,
+    position_seconds: body.data.positionSeconds,
+    completed_at: body.data.completed ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString()
+  }, { onConflict: "user_id,episode_id" })
+    .select("episode_id,position_seconds,completed_at,updated_at")
+    .single();
+  if (error) return res.status(500).json({ error: "Could not save watch progress" });
+  return res.json({ progress: data });
+});
+
 app.post("/v1/reports", async (req, res) => {
   if (!db) return unavailable(res);
   const user = await authenticated(req, res);
