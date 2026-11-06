@@ -36,3 +36,14 @@ Open `index.html` in a browser or enable GitHub Pages for the repository. On mob
 ## Content and copyright
 
 Only content owned by ZeekDrop or content covered by documented distribution/streaming rights may be published. Sample cards in this prototype are for UI demonstration only.
+
+
+## Repository implementation map
+
+- `android/`: native Kotlin + Jetpack Compose Android application foundation.
+- `backend/`: TypeScript API foundation (health + published catalogue reads).
+- `supabase/migrations/`: initial Postgres schema and RLS policies; apply only to a dedicated ZeekDrop project.
+- `docs/`: architecture, API contract and release gates.
+- `.github/workflows/zeekdrop-ci.yml`: automated backend and Android build checks.
+
+The CI workflow is committed but must complete successfully on GitHub Actions before the build is considered verified. The database migration is committed but has not been applied to a live project. No video is licensed or bundled by this repository.
