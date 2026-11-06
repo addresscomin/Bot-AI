@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZeekDrop • Owner Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#090a10;--panel:#151722;--line:#292d3d;--muted:#9ba2b7;--pink:#ff526d;--green:#47d7a0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#30203a 0,transparent 35%),var(--bg);color:#f7f7fb;font:15px Inter,system-ui,sans-serif}
+main{max-width:1100px;margin:auto;padding:28px 18px 60px}.brand{font-weight:900;letter-spacing:.12em;font-size:13px;color:var(--pink)}h1{font-size:32px;margin:8px 0}p,.muted{color:var(--muted)}.panel{background:#151722;border:1px solid var(--line);border-radius:18px;padding:18px;margin:16px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}input,button,textarea{font:inherit;border-radius:10px;padding:12px;border:1px solid var(--line);background:#0d0f18;color:#fff;width:100%;margin:5px 0}textarea{min-height:72px}button{background:var(--pink);border:0;color:#fff;font-weight:750;cursor:pointer}button.secondary{background:#252a39}button:disabled{opacity:.5;cursor:wait}.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.item{border-top:1px solid var(--line);padding:14px 0}.pill{font-size:11px;padding:4px 8px;border-radius:99px;background:#292d3d;color:#ffd6dd}.hidden{display:none!important}.note{font-size:12px;line-height:1.5}.good{color:var(--green)}.bad{color:#ff8b9e}
+</style>
+</head>
+<body><main>
+<div class="brand">ZEEKDROP / OWNER STUDIO</div><h1>Content control room</h1><p>Review submissions, verify distribution rights, publish approved dramas and track reports.</p>
+<section id="config" class="panel">
+<h2>Connect your ZeekDrop database</h2><p class="note">Use the dedicated ZeekDrop Supabase project URL and publishable key. Never enter a service-role or secret key here.</p>
+<input id="url" placeholder="https://YOUR-PROJECT.supabase.co"><input id="key" placeholder="Supabase publishable key">
+<button id="connect">Connect</button><p id="configMsg" class="note"></p>
+</section>
+<section id="login" class="panel hidden"><h2>Owner / moderator sign in</h2><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><button id="signIn">Sign in</button><p id="loginMsg" class="note"></p></section>
+<section id="workspace" class="hidden">
+<div class="row"><div><h2>Submissions & catalogue</h2><p id="who" class="note"></p></div><button id="refresh" class="secondary">Refresh</button><button id="signOut" class="secondary">Sign out</button></div>
+<div class="panel"><h3>Rights verification & publishing</h3><p class="note">Select a drama below, enter the actual signed agreement reference, and publish only after confirming the licence covers ZeekDrop, the territory and the selected dates.</p>
+<input id="selectedId" placeholder="Selected series ID" readonly><div class="grid"><input id="rightsHolder" placeholder="Rights holder / licensor"><input id="agreement" placeholder="Agreement reference (required)"><input id="territories" placeholder="Territory codes, e.g. IN"><input id="starts" type="datetime-local"><input id="ends" type="datetime-local" placeholder="Optional end date"></div>
+<button id="verifyPublish">Save verified rights & publish selected drama</button><p id="publishMsg" class="note"></p></div>
+<div class="panel"><h3>Drama catalogue</h3><div id="seriesList" class="muted">Connect and sign in to load catalogue.</div></div>
+<div class="panel"><h3>Content reports</h3><div id="reports" class="muted">No reports loaded.</div></div>
+</section>
+<p class="note">Security: this dashboard uses the signed-in user's session and database row-level security. It does not contain a service-role key. A verified rights record is required before public catalogue access.</p>
+</main>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+let supabase=null, session=null, selected=null;
+const $=id=>document.getElementById(id);
+function msg(id,text,ok=false){$(id).textContent=text;$(id).className="note "+(ok?"good":"bad")}
+function show(id,on){$(id).classList.toggle("hidden",!on)}
+function esc(v=""){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("connect").onclick=async()=>{
+ const url=$("url").value.trim(),key=$("key").value.trim();
+ if(!url.startsWith("https://")||!key){msg("configMsg","Enter a valid project URL and publishable key.");return}
+ localStorage.setItem("zd_url",url);localStorage.setItem("zd_key",key);
+ supabase=createClient(url,key);msg("configMsg","Connected. Sign in below.",true);show("login",true);
+ const {data}=await supabase.auth.getSession();if(data.session)await enter(data.session);
+};
+$("url").value=localStorage.getItem("zd_url")||"";$("key").value=localStorage.getItem("zd_key")||"";
+if($("url").value&&$("key").value){supabase=createClient($("url").value,$("key").value);show("login",true);supabase.auth.getSession().then(({data})=>{if(data.session)enter(data.session)})}
+$("signIn").onclick=async()=>{if(!supabase)return;const {data,error}=await supabase.auth.signInWithPassword({email:$("email").value,password:$("password").value});if(error){msg("loginMsg",error.message);return}await enter(data.session)};
+async function enter(s){session=s;const {data:roles,error}=await supabase.from("user_roles").select("role").eq("user_id",s.user.id);if(error){msg("loginMsg","Could not verify account role: "+error.message);return}if(!(roles||[]).some(x=>["admin","moderator"].includes(x.role))){msg("loginMsg","This account is not an approved admin/moderator.");await supabase.auth.signOut();return}show("config",false);show("login",false);show("workspace",true);$("who").textContent=s.user.email+" • "+roles.map(x=>x.role).join(", ");await refresh()}
+async function refresh(){await loadSeries();await loadReports()}
+async function loadSeries(){const {data,error}=await supabase.from("series").select("id,title,status,language_code,age_rating,created_at,created_by").order("created_at",{ascending:false}).limit(100);if(error){$("seriesList").textContent=error.message;return}$("seriesList").innerHTML=(data||[]).map(x=>`<div class="item"><div class="row"><div><b>${esc(x.title)}</b><div class="note">${esc(x.id)} · ${esc(x.language_code)} · ${esc(x.age_rating)}</div></div><span class="pill">${esc(x.status)}</span><button class="secondary choose" data-id="${esc(x.id)}">Select</button></div></div>`).join("")||"No dramas found.";document.querySelectorAll(".choose").forEach(b=>b.onclick=()=>{selected=b.dataset.id;$("selectedId").value=selected;msg("publishMsg","Selected. Verify the actual licence before publishing.",true)})}
+async function loadReports(){const {data,error}=await supabase.from("content_reports").select("id,reason,details,status,created_at,series_id,episode_id").order("created_at",{ascending:false}).limit(50);if(error){$("reports").textContent=error.message;return}$("reports").innerHTML=(data||[]).map(r=>`<div class="item"><b>${esc(r.reason)}</b><div class="note">${esc(r.details)} · ${esc(r.status)}</div><div class="row"><button class="secondary" data-report="${esc(r.id)}" data-status="investigating">Investigating</button><button class="secondary" data-report="${esc(r.id)}" data-status="resolved">Resolve</button></div></div>`).join("")||"No reports.";document.querySelectorAll("[data-report]").forEach(b=>b.onclick=async()=>{const {error}=await supabase.from("content_reports").update({status:b.dataset.status}).eq("id",b.dataset.report);if(error)alert(error.message);else loadReports()})}
+$("verifyPublish").onclick=async()=>{if(!selected){msg("publishMsg","Select a drama first.");return}const holder=$("rightsHolder").value.trim(),agreement=$("agreement").value.trim(),start=$("starts").value;if(!holder||!agreement||!start){msg("publishMsg","Rights holder, agreement reference and start date are required.");return}const {error:re}=await supabase.from("content_rights").insert({series_id:selected,rights_holder:holder,agreement_reference:agreement,territory_codes:$("territories").value.split(",").map(x=>x.trim().toUpperCase()).filter(Boolean),platforms:["android","web"],starts_at:new Date(start).toISOString(),ends_at:$("ends").value?new Date($("ends").value).toISOString():null,status:"verified",verified_by:session.user.id,verified_at:new Date().toISOString()});if(re){msg("publishMsg","Rights save failed: "+re.message);return}const {error:pe}=await supabase.from("series").update({status:"published",published_at:new Date().toISOString()}).eq("id",selected);if(pe){msg("publishMsg","Rights saved, but publishing failed: "+pe.message);return}msg("publishMsg","Rights saved and drama published.",true);await refresh()};
+$("refresh").onclick=refresh;$("signOut").onclick=async()=>{await supabase.auth.signOut();session=null;show("workspace",false);show("login",true)};
+</script></body></html>
