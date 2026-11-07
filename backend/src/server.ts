@@ -269,6 +269,29 @@ app.get("/v1/me/subscription/payments", async (req, res) => {
   return res.json({ currency: "INR", items: data ?? [] });
 });
 
+
+app.get("/v1/admin/subscriptions", async (req, res) => {
+  if (!db) return unavailable(res);
+  const user = await authenticated(req, res);
+  if (!user) return;
+  if (!user.roles.some((role) => role === "admin" || role === "moderator")) {
+    return res.status(403).json({ error: "Staff access is required" });
+  }
+  const parsed = z.object({
+    status: z.enum(["pending","active","past_due","cancelled","expired","refunded"]).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50)
+  }).safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: "Invalid subscription filters" });
+  let query = user.client.from("subscriptions")
+    .select("id,user_id,plan_id,status,currency,amount_paise,current_period_start,current_period_end,cancel_at_period_end,created_at")
+    .order("created_at", { ascending: false })
+    .limit(parsed.data.limit);
+  if (parsed.data.status) query = query.eq("status", parsed.data.status);
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ error: "Admin subscription list failed" });
+  return res.json({ currency: "INR", items: data ?? [] });
+});
+
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
 app.listen(port, () => {
   console.log(`ZeekDrop API listening on ${port}`);
