@@ -231,6 +231,44 @@ app.post("/v1/reports", async (req, res) => {
   return res.status(201).json({ report: data });
 });
 
+
+app.get("/v1/subscription-plans", async (_req, res) => {
+  if (!db) return unavailable(res);
+  const { data, error } = await db.from("subscription_plans")
+    .select("id,name,amount_paise,currency,billing_interval,interval_count,benefits")
+    .eq("is_active", true)
+    .order("display_order");
+  if (error) return res.status(500).json({ error: "Subscription plans are not available" });
+  return res.json({ currency: "INR", items: data ?? [] });
+});
+
+app.get("/v1/me/subscription", async (req, res) => {
+  if (!db) return unavailable(res);
+  const user = await authenticated(req, res);
+  if (!user) return;
+  const { data, error } = await user.client.from("subscriptions")
+    .select("id,plan_id,status,currency,amount_paise,current_period_start,current_period_end,cancel_at_period_end,cancelled_at,created_at")
+    .eq("user_id", user.userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return res.status(500).json({ error: "Subscription status request failed" });
+  return res.json({ subscription: data, active: Boolean(data?.status === "active" && (!data.current_period_end || new Date(data.current_period_end).getTime() > Date.now())) });
+});
+
+app.get("/v1/me/subscription/payments", async (req, res) => {
+  if (!db) return unavailable(res);
+  const user = await authenticated(req, res);
+  if (!user) return;
+  const { data, error } = await user.client.from("subscription_payments")
+    .select("id,subscription_id,amount_paise,currency,status,receipt_reference,paid_at,created_at")
+    .eq("user_id", user.userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return res.status(500).json({ error: "Payment history request failed" });
+  return res.json({ currency: "INR", items: data ?? [] });
+});
+
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
 app.listen(port, () => {
   console.log(`ZeekDrop API listening on ${port}`);
